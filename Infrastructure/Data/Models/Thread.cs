@@ -38,7 +38,7 @@ namespace Forum.Infrastructure.Data.Models
         public Category Category { get; set; } = null!;
 
 
-        public ICollection<Post> Posts = new List<Post>();
+        public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     }
 }

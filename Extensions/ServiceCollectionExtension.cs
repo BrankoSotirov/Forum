@@ -1,4 +1,4 @@
-﻿using Forum.Data;
+﻿using Forum.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;

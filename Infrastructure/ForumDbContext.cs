@@ -1,60 +1,77 @@
-﻿using Forum.Infrastructure.Data.Models;
-using Humanizer;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using System.Reflection.Emit;
+using Forum.Infrastructure.Data.Models;
+using Microsoft.AspNetCore.Identity;
+using Thread = Forum.Infrastructure.Data.Models.Thread;
 
-namespace Forum.Data
+namespace Forum.Infrastructure.Data
 {
-    public class ForumDbContext : IdentityDbContext
+    public class ForumDbContext : IdentityDbContext<IdentityUser>
     {
         public ForumDbContext(DbContextOptions<ForumDbContext> options)
             : base(options)
         {
-           
         }
+
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Models.Thread> Threads { get; set; }
+        public DbSet<Post> Posts { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            base.OnModelCreating(modelBuilder);
+            // Configure relationships using Fluent API
 
-            modelBuilder.Entity<Post>()
-               .HasOne(p => p.User)
-               .WithMany()
-               .HasForeignKey(p => p.UserId)
-               .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Post>()
-                .HasOne(p => p.Thread)
-                .WithMany(t => t.Posts)
-                .HasForeignKey(p => p.ThreadId)
+            // Category -> Thread (One-to-Many)
+            modelBuilder.Entity<Category>()
+                .HasMany(c => c.Threads)
+                .WithOne(t => t.Category)
+                .HasForeignKey(t => t.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Category>()
-               .HasMany(c => c.Threads)
-               .WithOne(t => t.Category)
-               .HasForeignKey(t => t.CategoryId)
-               .OnDelete(DeleteBehavior.Cascade);
-
+            // Thread -> Post (One-to-Many)
+            modelBuilder.Entity<Thread>()
+        .HasMany(t => t.Posts) // Ensure this matches the property name in Thread
+        .  WithOne(p => p.Thread)
+        .HasForeignKey(p => p.ThreadId)
+        .OnDelete(DeleteBehavior.NoAction);
+           
+            // Post -> Comment (One-to-Many)
             modelBuilder.Entity<Post>()
-                .HasMany(c => c.Comments)
-                .WithOne(t => t.Post)
+                .HasMany(p => p.Comments)
+                .WithOne(c => c.Post)
                 .HasForeignKey(c => c.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // User -> Category (One-to-Many)
+            modelBuilder.Entity<Category>()
+                .HasOne(c => c.Creator)
+                .WithMany()
+                .HasForeignKey(c => c.CreatorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // User -> Thread (One-to-Many)
+            modelBuilder.Entity<Models.Thread>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // User -> Post (One-to-Many)
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // User -> Comment (One-to-Many)
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
-
-        public DbSet<Category> Categories { get; set; }
-
-        public DbSet<Comment> Comments { get; set; }
-
-        public DbSet<CommentReport> Reports { get; set; }
-
-        public DbSet<Infrastructure.Data.Models.Thread> Threads { get; set; }
-
-        public DbSet<Post> Posts { get; set; }
     }
 }
